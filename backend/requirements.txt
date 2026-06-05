@@ -1,0 +1,22 @@
+# ===== LinguaFlow Backend Dependencies =====
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+sqlalchemy==2.0.36
+numpy==2.2.1
+websockets==14.1
+
+# ---- Optional: local ASR (uncomment to enable ASR_PROVIDER=faster-whisper) ----
+# faster-whisper==1.1.0
+
+# ---- Optional: OpenAI provider (ASR/translation) ----
+# openai==1.59.6
+
+# ---- Optional: Gemini provider ----
+# google-generativeai==0.8.3
+
+# ---- Dev / tests ----
+httpx==0.28.1
+pytest==8.3.4
