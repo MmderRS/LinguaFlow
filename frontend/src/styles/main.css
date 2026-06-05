@@ -1,0 +1,74 @@
+:root {
+  color-scheme: light;
+  --lf-bg: #07111f;
+  --lf-bg-soft: rgba(12, 29, 52, 0.9);
+  --lf-panel: rgba(13, 31, 58, 0.78);
+  --lf-panel-border: rgba(113, 184, 255, 0.2);
+  --lf-accent: #2f9bff;
+  --lf-accent-soft: #78c2ff;
+  --lf-text: #eef6ff;
+  --lf-text-muted: #98b8d9;
+  --lf-success: #23b26f;
+  --lf-warning: #f5a623;
+  --lf-danger: #f05d5e;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(54, 128, 255, 0.26), transparent 34%),
+    radial-gradient(circle at right, rgba(56, 173, 255, 0.2), transparent 26%),
+    linear-gradient(160deg, #020813, #07111f 40%, #09192c);
+  color: var(--lf-text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: transparent;
+  color: var(--lf-text);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.lf-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lf-panel {
+  background: var(--lf-panel);
+  border: 1px solid var(--lf-panel-border);
+  border-radius: 24px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(18px);
+}
+
+.lf-heading {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.lf-subheading {
+  margin: 0;
+  color: var(--lf-text-muted);
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .lf-heading {
+    font-size: 26px;
+  }
+}
