@@ -52,6 +52,9 @@ export interface StatusMessage {
   session_id: string
   state: ConnectionState | string
   detail: string
+  asr_provider?: string | null
+  translation_provider?: string | null
+  is_mock_asr?: boolean
 }
 
 export interface ASRMessage {

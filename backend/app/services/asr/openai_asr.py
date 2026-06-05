@@ -16,6 +16,8 @@ def _filename_for_mime_type(mime_type: str) -> str:
 
 
 class OpenAIASRService(BaseASRService):
+    supports_stream_chunks = False
+
     async def transcribe_audio(
         self,
         audio_bytes: bytes,

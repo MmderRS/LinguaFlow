@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import { fetchSettings } from '../services/api'
+import { fetchSettings, updateAsrProvider, updateTranslationProvider } from '../services/api'
 import type { PublicSettings } from '../types'
 
 export const useSettingsStore = defineStore('settings', {
@@ -20,6 +20,12 @@ export const useSettingsStore = defineStore('settings', {
       } finally {
         this.loading = false
       }
+    },
+    async setAsrProvider(provider: string) {
+      this.settings = await updateAsrProvider(provider)
+    },
+    async setTranslationProvider(provider: string) {
+      this.settings = await updateTranslationProvider(provider)
     },
   },
 })

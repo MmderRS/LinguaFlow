@@ -14,6 +14,22 @@ import type {
 
 const createSessionId = () => `session-${Math.random().toString(36).slice(2, 10)}`
 
+function pickRecordingMimeType(): string {
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus',
+  ]
+
+  for (const candidate of candidates) {
+    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(candidate)) {
+      return candidate
+    }
+  }
+
+  return ''
+}
+
 export const useRealtimeStore = defineStore('realtime', {
   state: () => ({
     client: null as RealtimeSocketClient | null,
@@ -27,9 +43,13 @@ export const useRealtimeStore = defineStore('realtime', {
     error: '',
     mediaRecorder: null as MediaRecorder | null,
     websocketPath: '/ws/realtime',
+    asrProvider: '',
+    translationProvider: '',
+    isMockAsr: false,
   }),
   getters: {
     latestSegments: (state) => [...state.segments].reverse(),
+    hasRealAsr: (state) => !state.isMockAsr,
   },
   actions: {
     async connect(path = '/ws/realtime') {
@@ -44,7 +64,7 @@ export const useRealtimeStore = defineStore('realtime', {
         this.client?.sendJson({
           type: 'start',
           session_id: this.sessionId,
-          mime_type: 'audio/webm',
+          mime_type: pickRecordingMimeType() || 'audio/webm',
         })
       }
       socket.onclose = () => {
@@ -89,6 +109,13 @@ export const useRealtimeStore = defineStore('realtime', {
       if (message.session_id) {
         this.sessionId = message.session_id
       }
+      if (message.asr_provider) {
+        this.asrProvider = message.asr_provider
+      }
+      if (message.translation_provider) {
+        this.translationProvider = message.translation_provider
+      }
+      this.isMockAsr = Boolean(message.is_mock_asr)
     },
     applyAsr(message: ASRMessage) {
       if (message.is_final) {
@@ -169,7 +196,8 @@ export const useRealtimeStore = defineStore('realtime', {
         await this.connect(this.websocketPath)
       }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+      const mimeType = pickRecordingMimeType()
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           this.client?.sendBytes(event.data)
@@ -182,6 +210,9 @@ export const useRealtimeStore = defineStore('realtime', {
       recorder.start(900)
       this.mediaRecorder = recorder
       this.recording = true
+      this.connectionDetail = this.isMockAsr
+        ? '演示录音已开始'
+        : '录音中，停止后会提交完整语音片段进行识别'
     },
     stopRecording() {
       this.mediaRecorder?.stop()

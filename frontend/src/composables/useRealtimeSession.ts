@@ -18,8 +18,14 @@ export function useRealtimeSession() {
     realtimeStore.disconnect()
   })
 
+  async function reconnectRealtimeSession() {
+    realtimeStore.disconnect()
+    await realtimeStore.connect(settingsStore.settings?.websocket_path || '/ws/realtime')
+  }
+
   return {
     realtimeStore,
     settingsStore,
+    reconnectRealtimeSession,
   }
 }

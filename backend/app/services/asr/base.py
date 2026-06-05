@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 class BaseASRService(ABC):
     supports_partial: bool = False
+    supports_stream_chunks: bool = False
 
     @abstractmethod
     async def transcribe_audio(

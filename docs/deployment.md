@@ -58,6 +58,14 @@ OPENAI_TRANSLATION_MODEL=gpt-4o-mini
 OPENAI_WHISPER_MODEL=whisper-1
 ```
 
+或优先走免费路线：
+
+```env
+ASR_PROVIDER=faster-whisper
+TRANSLATION_PROVIDER=libretranslate
+LIBRETRANSLATE_URL=https://libretranslate.com/translate
+```
+
 或：
 
 ```env

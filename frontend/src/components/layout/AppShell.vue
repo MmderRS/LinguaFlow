@@ -38,18 +38,24 @@ const navItems = [
 
 <style scoped>
 .shell {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 20px;
   padding: 20px;
+  overflow: hidden;
 }
 
 .sidebar {
+  position: sticky;
+  top: 20px;
+  align-self: start;
+  height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 28px;
+  overflow: auto;
 }
 
 .brand-kicker {
@@ -125,6 +131,8 @@ const navItems = [
 
 .content {
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
 }
 
 @media (max-width: 1080px) {

@@ -8,8 +8,8 @@ sqlalchemy==2.0.36
 numpy==2.2.1
 websockets==14.1
 
-# ---- Optional: local ASR (uncomment to enable ASR_PROVIDER=faster-whisper) ----
-# faster-whisper==1.1.0
+# ---- Optional: local ASR (enable ASR_PROVIDER=faster-whisper) ----
+faster-whisper==1.1.0
 
 # ---- Optional: OpenAI provider (ASR/translation) ----
 # openai==1.59.6

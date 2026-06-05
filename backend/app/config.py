@@ -25,11 +25,14 @@ class Settings(BaseSettings):
     whisper_device: str = "cpu"
     whisper_compute_type: str = "int8"
     whisper_language: str = "en"
+    whisper_vad_filter: bool = True
 
     # ---- Translation ----
-    translation_provider: str = "mock"  # openai | gemini | mock
+    translation_provider: str = "mock"  # openai | gemini | libretranslate | mock
     translation_source_lang: str = "English"
     translation_target_lang: str = "Chinese"
+    libretranslate_url: str = "https://libretranslate.com/translate"
+    libretranslate_api_key: str = ""
 
     # ---- OpenAI ----
     openai_api_key: str = ""

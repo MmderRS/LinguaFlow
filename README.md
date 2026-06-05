@@ -6,8 +6,8 @@
 - Vue 3 + Vite + TypeScript + Element Plus + Pinia 前端
 - FastAPI + SQLite 后端
 - WebSocket 实时双向通信
-- mock / OpenAI Whisper ASR provider 抽象
-- mock / OpenAI / Gemini 翻译 provider 抽象
+- mock / OpenAI Whisper / faster-whisper ASR provider 抽象
+- mock / OpenAI / Gemini / LibreTranslate 翻译 provider 抽象
 - 双语字幕、自动修正、人工修正
 - 术语库管理、历史记录查询/删除/导出 JSON
 
@@ -64,11 +64,17 @@ LinguaFlow/
 
 安装依赖：
 
-```bash
+```powershell
 "D:/ProgramData/miniconda3/envs/py310/python.exe" -m pip install -r "E:/LinguaFlow/backend/requirements.txt"
 ```
 
-启动服务：
+启动服务（PowerShell 推荐写法）：
+
+```powershell
+python -m uvicorn app.main:app --app-dir "E:\LinguaFlow\backend" --host 0.0.0.0 --port 8000
+```
+
+如果你使用 bash / Git Bash，也可以这样启动：
 
 ```bash
 PYTHONPATH="E:/LinguaFlow/backend" "D:/ProgramData/miniconda3/envs/py310/python.exe" -m uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -97,19 +103,46 @@ npm --prefix "E:/LinguaFlow/frontend" run dev
 
 关键项：
 - `ASR_PROVIDER=mock|openai|faster-whisper`
-- `TRANSLATION_PROVIDER=mock|openai|gemini`
+- `TRANSLATION_PROVIDER=mock|openai|gemini|libretranslate`
 - `OPENAI_API_KEY=`
 - `OPENAI_TRANSLATION_MODEL=gpt-4o-mini`
 - `OPENAI_WHISPER_MODEL=whisper-1`
 - `GEMINI_API_KEY=`
+- `LIBRETRANSLATE_URL=`
+- `LIBRETRANSLATE_API_KEY=`
 - `DATABASE_URL=sqlite:///./linguaflow.db`
 
 ## 页面说明
 
 - 首页：项目概览与能力说明
-- 实时翻译页：麦克风录音、调试文本注入、双语字幕、自动修正、人工修正
+- 实时翻译页：麦克风录音、调试文本注入、双语字幕、自动修正、人工修正、运行时 ASR 切换
 - 历史记录页：查询、删除、导出 JSON、继续修正
-- 设置页：查看 provider 配置、管理用户术语
+- 设置页：查看 provider 配置、管理用户术语、运行时切换 ASR / Translation provider
+
+## 运行时切换
+
+当前版本支持在不重启后端的情况下切换 provider。
+
+可切换能力：
+- ASR：`mock` / `faster-whisper` / `openai`
+- Translation：`mock` / `openai` / `gemini` / `libretranslate`
+
+切换入口：
+- 实时翻译页顶部 `ASR Provider`
+- 设置页 `运行时配置`
+
+说明：
+- 切换后，新的实时会话会按当前 provider 生效
+- 当前页面会通过 WebSocket 状态消息同步显示实际运行中的 provider
+
+## 录音与实时行为
+
+当前真实 ASR 模式下的行为是：
+- 点击“开始录音”后开始采集音频
+- 点击“停止录音”后，后端提交完整语音段进行识别与翻译
+- 这样做是为了避免浏览器 `MediaRecorder` 分片在 `faster-whisper` / `openai` 解码时出现 `Invalid data found when processing input`
+
+当前 `mock` 模式下仍可用于演示字幕链路，但不会转写你的真实语音。
 
 ## 实时协议
 
@@ -146,6 +179,7 @@ npm --prefix "E:/LinguaFlow/frontend" run build
 当前验证结果：
 - 后端测试：4/4 通过
 - 前端构建：通过
+- 运行时 provider 切换接口已验证：`mock -> faster-whisper -> openai -> mock`
 
 ## 分阶段交付说明
 
@@ -187,8 +221,9 @@ implement realtime websocket subtitle pipeline
 ```
 
 ### Phase 5: 实现 Whisper 识别
-- 已完成 provider 抽象和 OpenAI Whisper 接口接入；默认仍可用 mock 路径演示。
-- 测试方法：配置 `ASR_PROVIDER=openai` 和 `OPENAI_API_KEY` 后用麦克风录音验证。
+- 已完成 provider 抽象、OpenAI Whisper 接口接入，以及 `faster-whisper` 本地免费识别实现。
+- 已支持在前端页面运行时切换 `mock` / `faster-whisper` / `openai`。
+- 测试方法：切换 `ASR Provider` 后用麦克风录音验证。
 - Git Commit Message:
 
 ```text
@@ -196,8 +231,9 @@ add configurable ASR providers with OpenAI Whisper support
 ```
 
 ### Phase 6: 实现 AI 翻译
-- 已完成 mock / OpenAI / Gemini 统一翻译接口。
-- 测试方法：切换 `TRANSLATION_PROVIDER` 并验证术语优先翻译。
+- 已完成 mock / OpenAI / Gemini / LibreTranslate 统一翻译接口。
+- 已支持在前端设置页运行时切换翻译 provider。
+- 测试方法：切换 Translation Provider 并验证术语优先翻译。
 - Git Commit Message:
 
 ```text
@@ -233,6 +269,7 @@ document deployment and architecture for MVP handoff
 
 ## 当前限制
 
-- 浏览器实时音频链路已具备，但更稳定的流式断句与低延迟控制还需要进一步迭代。
-- `faster-whisper` 目前仍保留为接口占位，尚未接入真实本地推理实现。
+- 当前翻译仍然是“整段语音结束后触发 final translation”，还没有做到真正的 partial translation 流式中文草稿。
+- 当前真实 ASR 模式下，建议说完一句后点击“停止录音”，由后端对完整音频段做识别；自动断句与更连续的低延迟流式转写还需要继续迭代。
+- 公共 `LibreTranslate` 实例稳定性和质量有限，更适合作为免费备用路径，不建议直接作为生产级默认翻译。
 - 前端生产构建存在 chunk size 警告，但不影响运行；后续可做路由级拆包优化。

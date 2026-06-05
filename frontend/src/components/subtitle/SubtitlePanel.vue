@@ -11,8 +11,13 @@
       </div>
     </header>
 
-    <div v-if="partialText" class="partial-box">
-      <p class="partial-label">识别中</p>
+    <div v-if="isMockAsr" class="mock-banner">
+      <strong>当前为 Mock ASR 演示模式</strong>
+      <span>录音不会转写你的真实语音，字幕会显示模拟识别结果。请切换到 faster-whisper 或 openai 后再进行真实识别。</span>
+    </div>
+
+    <div v-if="partialText" class="partial-box" :class="{ 'partial-box--mock': isMockAsr }">
+      <p class="partial-label">{{ isMockAsr ? '模拟识别输出' : '实时识别中' }}</p>
       <p class="partial-text">{{ partialText }}</p>
     </div>
 
@@ -39,6 +44,7 @@ const props = defineProps<{
   partialText: string
   connectionState: string
   connectionDetail: string
+  isMockAsr: boolean
 }>()
 
 defineEmits<{
@@ -51,6 +57,9 @@ const orderedSegments = computed(() => [...props.segments].reverse())
 <style scoped>
 .panel {
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .panel-head {
@@ -99,12 +108,37 @@ h3 {
   font-size: 13px;
 }
 
+.mock-banner {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  background: rgba(245, 166, 35, 0.12);
+  border: 1px solid rgba(245, 166, 35, 0.24);
+  color: #ffd9a5;
+}
+
+.mock-banner strong {
+  font-size: 14px;
+}
+
+.mock-banner span {
+  line-height: 1.6;
+  font-size: 13px;
+}
+
 .partial-box {
   padding: 16px 18px;
   margin-bottom: 18px;
   border-radius: 18px;
   background: rgba(47, 155, 255, 0.12);
   border: 1px solid rgba(113, 184, 255, 0.18);
+}
+
+.partial-box--mock {
+  background: rgba(245, 166, 35, 0.08);
+  border-color: rgba(245, 166, 35, 0.18);
 }
 
 .partial-label {
@@ -124,7 +158,8 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-height: 720px;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 }
 

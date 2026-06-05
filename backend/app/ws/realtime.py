@@ -7,6 +7,7 @@ from app.database import SessionLocal
 from app.schemas import ASRMessage, ErrorMessage, StatusMessage, TranslationMessage
 from app.services import history_service, subtitle_service, term_service
 from app.services.provider_factory import get_asr_service, get_translation_service
+from app.services.runtime_config import get_asr_provider, get_translation_provider
 from app.services.session_service import RealtimeSessionState
 from app.ws.connection_manager import manager
 
@@ -15,6 +16,19 @@ router = APIRouter()
 
 async def _send_error(websocket: WebSocket, detail: str) -> None:
     await manager.send_model(websocket, ErrorMessage(detail=detail))
+
+
+def _runtime_status(session_id: str, state: str, detail: str) -> StatusMessage:
+    asr_provider = get_asr_provider()
+    translation_provider = get_translation_provider()
+    return StatusMessage(
+        session_id=session_id,
+        state=state,
+        detail=detail,
+        asr_provider=asr_provider,
+        translation_provider=translation_provider,
+        is_mock_asr=asr_provider.lower() == "mock",
+    )
 
 
 async def _finalize_segment(websocket: WebSocket, state: RealtimeSessionState, db) -> None:
@@ -136,7 +150,7 @@ async def realtime_websocket(websocket: WebSocket) -> None:
     try:
         await manager.send_model(
             websocket,
-            StatusMessage(session_id="", state="connected", detail="WebSocket ready"),
+            _runtime_status("", "connected", "WebSocket ready"),
         )
 
         while True:
@@ -157,11 +171,7 @@ async def realtime_websocket(websocket: WebSocket) -> None:
                     manager.bind_session(websocket, session_id)
                     await manager.send_model(
                         websocket,
-                        StatusMessage(
-                            session_id=session_id,
-                            state="listening",
-                            detail="Audio stream started",
-                        ),
+                        _runtime_status(session_id, "listening", "Audio stream started"),
                     )
                     continue
 
@@ -169,22 +179,14 @@ async def realtime_websocket(websocket: WebSocket) -> None:
                     await _finalize_segment(websocket, state, db)
                     await manager.send_model(
                         websocket,
-                        StatusMessage(
-                            session_id=state.session_id,
-                            state="idle",
-                            detail="Audio stream stopped",
-                        ),
+                        _runtime_status(state.session_id, "idle", "Audio stream stopped"),
                     )
                     continue
 
                 if event_type == "ping":
                     await manager.send_model(
                         websocket,
-                        StatusMessage(
-                            session_id=state.session_id,
-                            state="heartbeat",
-                            detail="pong",
-                        ),
+                        _runtime_status(state.session_id, "heartbeat", "pong"),
                     )
                     continue
 
@@ -216,16 +218,17 @@ async def realtime_websocket(websocket: WebSocket) -> None:
                                 is_final=False,
                             ),
                         )
-                    if state.chunk_count >= 3:
-                        await _finalize_segment(websocket, state, db)
-                elif state.chunk_count >= 2:
+                if asr_service.supports_stream_chunks and state.chunk_count >= 3:
                     await _finalize_segment(websocket, state, db)
                 continue
 
     except WebSocketDisconnect:
         pass
     except Exception as exc:
-        await _send_error(websocket, str(exc))
+        message = str(exc)
+        if "Invalid data found when processing input" in message:
+            message = "音频解码失败。请优先切换到 webm/opus 或 wav 录音格式，并在说完后点击停止录音。"
+        await _send_error(websocket, message)
     finally:
         db.close()
         await manager.disconnect(websocket)

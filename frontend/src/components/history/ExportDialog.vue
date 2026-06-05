@@ -36,4 +36,9 @@ function openUrl() {
   color: var(--lf-text-muted);
   line-height: 1.8;
 }
+
+:deep(.el-input__wrapper) {
+  background: rgba(8, 22, 42, 0.94);
+  color: var(--lf-text);
+}
 </style>

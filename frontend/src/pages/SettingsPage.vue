@@ -14,6 +14,20 @@
           <p class="eyebrow">Runtime</p>
           <h3>运行时配置</h3>
         </header>
+        <div class="runtime-switches">
+          <label>
+            <span>ASR Provider</span>
+            <el-select v-model="selectedAsrProvider" @change="changeAsrProvider">
+              <el-option v-for="provider in settingsStore.settings?.available_asr_providers || []" :key="provider" :label="provider" :value="provider" />
+            </el-select>
+          </label>
+          <label>
+            <span>Translation Provider</span>
+            <el-select v-model="selectedTranslationProvider" @change="changeTranslationProvider">
+              <el-option v-for="provider in settingsStore.settings?.available_translation_providers || []" :key="provider" :label="provider" :value="provider" />
+            </el-select>
+          </label>
+        </div>
         <dl>
           <div>
             <dt>当前 ASR</dt>
@@ -39,6 +53,7 @@
           <p class="eyebrow">Glossary</p>
           <h3>新增术语</h3>
         </header>
+        <p class="card-copy">针对遥感、GIS、深度学习等术语提前设定标准译法，能显著降低实时翻译抖动。</p>
         <div class="term-form">
           <el-input v-model="form.domain" placeholder="领域，例如 Remote Sensing" />
           <el-input v-model="form.source" placeholder="英文术语" />
@@ -92,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 
 import { createTerm, deleteTerm, fetchTerms, updateTerm } from '../services/api'
 import { useSettingsStore } from '../stores/settings'
@@ -104,6 +119,8 @@ const terms = ref<TermItem[]>([])
 const termQuery = ref('')
 const editVisible = ref(false)
 const editingTerm = ref<TermItem | null>(null)
+const selectedAsrProvider = ref('mock')
+const selectedTranslationProvider = ref('mock')
 
 const form = reactive({
   domain: 'General',
@@ -119,6 +136,16 @@ const editForm = reactive({
 onMounted(async () => {
   await reloadAll()
 })
+
+watch(
+  () => settingsStore.settings,
+  (value) => {
+    if (!value) return
+    selectedAsrProvider.value = value.asr_provider
+    selectedTranslationProvider.value = value.translation_provider
+  },
+  { immediate: true },
+)
 
 async function reloadAll() {
   await settingsStore.load()
@@ -158,6 +185,14 @@ async function removeTerm(termId: number) {
   await deleteTerm(termId)
   await loadTerms()
 }
+
+async function changeAsrProvider(provider: string) {
+  await settingsStore.setAsrProvider(provider)
+}
+
+async function changeTranslationProvider(provider: string) {
+  await settingsStore.setTranslationProvider(provider)
+}
 </script>
 
 <style scoped>
@@ -180,6 +215,12 @@ async function removeTerm(termId: number) {
   padding: 24px;
 }
 
+.card-copy {
+  margin: 0 0 18px;
+  color: var(--lf-text-muted);
+  line-height: 1.7;
+}
+
 .eyebrow {
   margin: 0 0 6px;
   color: var(--lf-accent-soft);
@@ -195,6 +236,23 @@ h3 {
 .settings-card dl {
   display: grid;
   gap: 16px;
+}
+
+.runtime-switches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.runtime-switches label {
+  display: grid;
+  gap: 8px;
+}
+
+.runtime-switches span {
+  color: var(--lf-text-muted);
+  font-size: 13px;
 }
 
 .settings-card div {
@@ -239,6 +297,18 @@ h3 {
   --el-table-text-color: var(--lf-text);
   --el-table-header-text-color: var(--lf-text-muted);
   --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.04);
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-textarea__inner) {
+  background: rgba(8, 22, 42, 0.94);
+  color: var(--lf-text);
+}
+
+:deep(.el-dialog__body),
+:deep(.el-dialog__header),
+:deep(.el-dialog__footer) {
+  background: transparent;
 }
 
 @media (max-width: 1080px) {

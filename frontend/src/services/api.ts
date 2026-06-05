@@ -31,6 +31,20 @@ export function fetchSettings() {
   return request<PublicSettings>('/api/settings')
 }
 
+export function updateAsrProvider(provider: string) {
+  return request<PublicSettings>('/api/settings/asr-provider', {
+    method: 'POST',
+    body: JSON.stringify({ provider }),
+  })
+}
+
+export function updateTranslationProvider(provider: string) {
+  return request<PublicSettings>('/api/settings/translation-provider', {
+    method: 'POST',
+    body: JSON.stringify({ provider }),
+  })
+}
+
 export function fetchTerms(query = '') {
   const search = query ? `?query=${encodeURIComponent(query)}` : ''
   return request<TermItem[]>(`/api/terms${search}`)

@@ -63,13 +63,14 @@ LinguaFlow 采用前后端分离架构：
 
 ### ASR
 - `mock`：用于端到端调试
-- `openai`：当前真实识别优先路径
-- `faster-whisper`：当前保留接口，后续接入本地推理
+- `openai`：云端识别路径
+- `faster-whisper`：本地免费识别路径
 
 ### Translation
 - `mock`
 - `openai`
 - `gemini`
+- `libretranslate`
 
 三种翻译实现遵循统一接口，输入包含：
 - `source_text`

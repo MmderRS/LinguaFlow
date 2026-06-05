@@ -1,14 +1,15 @@
 from app.services.asr.base import BaseASRService
 
 SCRIPTED_SEGMENTS = [
-    "Welcome to today's remote sensing conference",
-    "We will focus on remote sensing image",
-    "analysis and land cover classification with U-Net models",
+    "[MOCK ASR] Welcome to today's remote sensing conference",
+    "[MOCK ASR] We will focus on remote sensing image",
+    "[MOCK ASR] analysis and land cover classification with U-Net models",
 ]
 
 
 class MockASRService(BaseASRService):
     supports_partial = True
+    supports_stream_chunks = True
 
     async def transcribe_audio(
         self,

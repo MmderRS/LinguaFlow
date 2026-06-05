@@ -1,8 +1,8 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --lf-bg: #07111f;
   --lf-bg-soft: rgba(12, 29, 52, 0.9);
-  --lf-panel: rgba(13, 31, 58, 0.78);
+  --lf-panel: rgba(13, 31, 58, 0.86);
   --lf-panel-border: rgba(113, 184, 255, 0.2);
   --lf-accent: #2f9bff;
   --lf-accent-soft: #78c2ff;
@@ -11,12 +11,35 @@
   --lf-success: #23b26f;
   --lf-warning: #f5a623;
   --lf-danger: #f05d5e;
+  --el-bg-color: #0b1830;
+  --el-bg-color-page: #081325;
+  --el-bg-color-overlay: #10233f;
+  --el-fill-color-blank: rgba(16, 35, 63, 0.96);
+  --el-fill-color-light: rgba(255, 255, 255, 0.04);
+  --el-fill-color: rgba(255, 255, 255, 0.06);
+  --el-mask-color: rgba(2, 7, 15, 0.72);
+  --el-text-color-primary: #eef6ff;
+  --el-text-color-regular: #d6e8ff;
+  --el-text-color-secondary: #9eb8d5;
+  --el-text-color-placeholder: #6f8fb4;
+  --el-border-color: rgba(113, 184, 255, 0.18);
+  --el-border-color-light: rgba(113, 184, 255, 0.14);
+  --el-border-color-lighter: rgba(113, 184, 255, 0.1);
+  --el-overlay-color-lighter: rgba(7, 17, 31, 0.78);
+  --el-box-shadow-light: 0 18px 36px rgba(0, 0, 0, 0.28);
+  --el-color-primary: #2f9bff;
   font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   background:
     radial-gradient(circle at top left, rgba(54, 128, 255, 0.26), transparent 34%),
     radial-gradient(circle at right, rgba(56, 173, 255, 0.2), transparent 26%),
     linear-gradient(160deg, #020813, #07111f 40%, #09192c);
   color: var(--lf-text);
+}
+
+html,
+body,
+#app {
+  height: 100%;
 }
 
 * {
@@ -26,7 +49,6 @@
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
   background: transparent;
   color: var(--lf-text);
 }
@@ -37,14 +59,11 @@ textarea {
   font: inherit;
 }
 
-#app {
-  min-height: 100vh;
-}
-
 .lf-page {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 100%;
 }
 
 .lf-panel {
@@ -65,6 +84,49 @@ textarea {
   margin: 0;
   color: var(--lf-text-muted);
   line-height: 1.7;
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-textarea__inner),
+:deep(.el-dialog),
+:deep(.el-card),
+:deep(.el-pagination button),
+:deep(.el-pager li) {
+  box-shadow: none;
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-textarea__inner) {
+  background: rgba(8, 22, 42, 0.94);
+  border: 1px solid rgba(113, 184, 255, 0.14);
+  color: var(--lf-text);
+}
+
+:deep(.el-input__wrapper.is-focus),
+:deep(.el-textarea__inner:focus) {
+  border-color: rgba(113, 184, 255, 0.32);
+}
+
+:deep(.el-dialog) {
+  background: rgba(10, 24, 46, 0.98);
+  border: 1px solid rgba(113, 184, 255, 0.18);
+}
+
+:deep(.el-dialog__title),
+:deep(.el-dialog__body),
+:deep(.el-dialog__headerbtn .el-dialog__close) {
+  color: var(--lf-text);
+}
+
+:deep(.el-alert) {
+  background: rgba(20, 39, 68, 0.82);
+  border: 1px solid rgba(113, 184, 255, 0.14);
+}
+
+:deep(.el-button:not(.el-button--primary)) {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(113, 184, 255, 0.14);
+  color: var(--lf-text);
 }
 
 @media (max-width: 768px) {

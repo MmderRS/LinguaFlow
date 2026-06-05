@@ -67,4 +67,10 @@ async function save() {
   flex-direction: column;
   gap: 14px;
 }
+
+:deep(.el-textarea__inner),
+:deep(.el-input__wrapper) {
+  background: rgba(8, 22, 42, 0.94);
+  color: var(--lf-text);
+}
 </style>

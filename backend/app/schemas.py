@@ -67,6 +67,10 @@ class PublicSettingsOut(BaseModel):
     supports_mock_input: bool = True
 
 
+class ProviderUpdateIn(BaseModel):
+    provider: str = Field(min_length=1, max_length=64)
+
+
 class ASRMessage(BaseModel):
     type: Literal["asr"] = "asr"
     segment_id: str
@@ -99,6 +103,9 @@ class StatusMessage(BaseModel):
     session_id: str
     state: str
     detail: str = ""
+    asr_provider: str | None = None
+    translation_provider: str | None = None
+    is_mock_asr: bool = False
 
 
 class ErrorMessage(BaseModel):
