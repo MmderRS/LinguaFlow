@@ -1,7 +1,7 @@
 from app.config import settings
 
 _available_asr = {"mock", "openai", "faster-whisper"}
-_available_translation = {"mock", "openai", "gemini", "libretranslate"}
+_available_translation = {"mock", "openai", "gemini", "libretranslate", "mymemory"}
 
 _runtime_state = {
     "asr_provider": settings.asr_provider,
@@ -38,4 +38,4 @@ def available_asr_providers() -> list[str]:
 
 
 def available_translation_providers() -> list[str]:
-    return ["mock", "openai", "gemini", "libretranslate"]
+    return ["mock", "mymemory", "libretranslate", "openai", "gemini"]

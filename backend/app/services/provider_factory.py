@@ -6,6 +6,7 @@ from app.services.translation.base import BaseTranslationService
 from app.services.translation.gemini_translation import GeminiTranslationService
 from app.services.translation.libretranslate_translation import LibreTranslateService
 from app.services.translation.mock_translation import MockTranslationService
+from app.services.translation.mymemory_translation import MyMemoryTranslationService
 from app.services.translation.openai_translation import OpenAITranslationService
 
 
@@ -36,6 +37,8 @@ def get_translation_service() -> BaseTranslationService:
             _translation_instances[provider] = GeminiTranslationService()
         elif provider == "libretranslate":
             _translation_instances[provider] = LibreTranslateService()
+        elif provider == "mymemory":
+            _translation_instances[provider] = MyMemoryTranslationService()
         else:
             _translation_instances[provider] = MockTranslationService()
     return _translation_instances[provider]

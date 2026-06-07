@@ -10,15 +10,32 @@ function toWsBase(url: string) {
 
 export class RealtimeSocketClient {
   private socket: WebSocket | null = null
+  private readyPromise: Promise<void> | null = null
 
   connect(path: string, onMessage: (message: RealtimeServerMessage) => void) {
     const wsUrl = `${toWsBase(API_BASE)}${path}`
     this.socket = new WebSocket(wsUrl)
+    this.readyPromise = new Promise((resolve, reject) => {
+      this.socket?.addEventListener('open', () => resolve(), { once: true })
+      this.socket?.addEventListener('error', () => reject(new Error('WebSocket 连接失败')), { once: true })
+    })
     this.socket.onmessage = (event) => {
       const payload = JSON.parse(event.data) as RealtimeServerMessage
       onMessage(payload)
     }
     return this.socket
+  }
+
+  async waitUntilOpen(timeoutMs = 5000) {
+    if (this.socket?.readyState === WebSocket.OPEN) return
+    if (!this.readyPromise) throw new Error('WebSocket 尚未初始化')
+
+    await Promise.race([
+      this.readyPromise,
+      new Promise((_, reject) => {
+        window.setTimeout(() => reject(new Error('WebSocket 连接超时')), timeoutMs)
+      }),
+    ])
   }
 
   sendJson(payload: Record<string, unknown>) {
@@ -36,5 +53,6 @@ export class RealtimeSocketClient {
   close() {
     this.socket?.close()
     this.socket = null
+    this.readyPromise = null
   }
 }

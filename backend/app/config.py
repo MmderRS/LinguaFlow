@@ -1,14 +1,18 @@
 """应用配置：从环境变量 / .env 读取，集中管理。"""
 from functools import lru_cache
+from pathlib import Path
 from typing import List
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+ENV_FILE = BACKEND_DIR / ".env"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore"
     )
 
     # ---- Server ----
@@ -28,11 +32,13 @@ class Settings(BaseSettings):
     whisper_vad_filter: bool = True
 
     # ---- Translation ----
-    translation_provider: str = "mock"  # openai | gemini | libretranslate | mock
+    translation_provider: str = "mymemory"  # mymemory | libretranslate | openai | gemini | mock
     translation_source_lang: str = "English"
     translation_target_lang: str = "Chinese"
     libretranslate_url: str = "https://libretranslate.com/translate"
     libretranslate_api_key: str = ""
+    mymemory_url: str = "https://api.mymemory.translated.net/get"
+    mymemory_email: str = ""
 
     # ---- OpenAI ----
     openai_api_key: str = ""

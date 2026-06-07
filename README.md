@@ -7,7 +7,7 @@
 - FastAPI + SQLite 后端
 - WebSocket 实时双向通信
 - mock / OpenAI Whisper / faster-whisper ASR provider 抽象
-- mock / OpenAI / Gemini / LibreTranslate 翻译 provider 抽象
+- mock / MyMemory 免费 API / LibreTranslate / OpenAI / Gemini 翻译 provider 抽象
 - 双语字幕、自动修正、人工修正
 - 术语库管理、历史记录查询/删除/导出 JSON
 
@@ -99,11 +99,15 @@ npm --prefix "E:/LinguaFlow/frontend" run dev
 
 ## 环境变量
 
-后端支持从 `.env` 读取配置。可参考 [backend/.env.example](backend/.env.example)。
+后端固定从 [backend/.env](backend/.env) 读取本地配置；如果该文件不存在，则使用 [backend/.env.example](backend/.env.example) 中描述的默认思路。这样无论你从项目根目录还是 backend 目录启动，provider 配置都不会因为工作目录不同而失效。
+
+当前本地默认推荐免费翻译 API：`TRANSLATION_PROVIDER=mymemory`。
 
 关键项：
 - `ASR_PROVIDER=mock|openai|faster-whisper`
-- `TRANSLATION_PROVIDER=mock|openai|gemini|libretranslate`
+- `TRANSLATION_PROVIDER=mymemory|libretranslate|mock|openai|gemini`
+- `MYMEMORY_URL=https://api.mymemory.translated.net/get`
+- `MYMEMORY_EMAIL=`（可选，填写邮箱可提升免费额度稳定性）
 - `OPENAI_API_KEY=`
 - `OPENAI_TRANSLATION_MODEL=gpt-4o-mini`
 - `OPENAI_WHISPER_MODEL=whisper-1`
@@ -111,6 +115,37 @@ npm --prefix "E:/LinguaFlow/frontend" run dev
 - `LIBRETRANSLATE_URL=`
 - `LIBRETRANSLATE_API_KEY=`
 - `DATABASE_URL=sqlite:///./linguaflow.db`
+
+## 翻译不生效排查
+
+如果前端字幕仍然显示英文，先确认后端实际 provider：
+
+```bash
+PYTHONPATH="E:/LinguaFlow/backend" "D:/ProgramData/miniconda3/envs/py310/python.exe" - <<'PY'
+from app.config import settings, ENV_FILE
+from app.services.runtime_config import get_translation_provider
+print('env_file=', ENV_FILE)
+print('settings.translation_provider=', settings.translation_provider)
+print('runtime.translation_provider=', get_translation_provider())
+PY
+```
+
+正常应看到 `settings.translation_provider=mymemory` 和 `runtime.translation_provider=mymemory`。如果设置页曾切到 `mock`，请在设置页切回 `mymemory`，或重启后端。
+
+也可以直接测试免费 API：
+
+```bash
+PYTHONPATH="E:/LinguaFlow/backend" "D:/ProgramData/miniconda3/envs/py310/python.exe" - <<'PY'
+import asyncio
+from app.services.translation.mymemory_translation import MyMemoryTranslationService
+
+async def main():
+    result = await MyMemoryTranslationService().translate('Remote sensing imagery supports land cover classification.', [], [])
+    print(result.target)
+
+asyncio.run(main())
+PY
+```
 
 ## 页面说明
 
@@ -125,7 +160,7 @@ npm --prefix "E:/LinguaFlow/frontend" run dev
 
 可切换能力：
 - ASR：`mock` / `faster-whisper` / `openai`
-- Translation：`mock` / `openai` / `gemini` / `libretranslate`
+- Translation：`mock` / `mymemory` / `libretranslate` / `openai` / `gemini`
 
 切换入口：
 - 实时翻译页顶部 `ASR Provider`
@@ -137,12 +172,25 @@ npm --prefix "E:/LinguaFlow/frontend" run dev
 
 ## 录音与实时行为
 
-当前真实 ASR 模式下的行为是：
-- 点击“开始录音”后开始采集音频
-- 点击“停止录音”后，后端提交完整语音段进行识别与翻译
-- 这样做是为了避免浏览器 `MediaRecorder` 分片在 `faster-whisper` / `openai` 解码时出现 `Invalid data found when processing input`
+当前真实 ASR 模式下采用“基于停顿的整句提交”方案：
 
-当前 `mock` 模式下仍可用于演示字幕链路，但不会转写你的真实语音。
+- 点击“开始录音”后，前端通过 `MediaRecorder` 采集麦克风音频。
+- 前端同时使用 Web Audio `AnalyserNode` 做轻量语音活动检测。
+- 检测到说话后持续累计音频；当出现约 700ms 静音停顿时，才发送 `finalize_audio` 事件提交当前音频段。
+- 如果用户长时间连续说话没有停顿，前端最多累计 10 秒后兜底提交一次，避免无限等待。
+- 后端收到 `finalize_audio` 后立即执行 ASR 与翻译，并通过 WebSocket 返回 `asr`、`translation` 和可能的 `correction` 消息。
+
+这套方案替代了固定 2 秒切片。固定切片虽然延迟低，但容易把一句完整的话截断，导致 Whisper 上下文不足、断句不自然，并进一步影响翻译质量。停顿断句能更接近“说完一句再翻译”，同时保持低延迟。
+
+翻译输出策略：
+
+- 免费 API 推荐优先使用 `mymemory`，它不需要 OpenAI / Gemini key，适合 MVP 演示和轻量测试。
+- `libretranslate` 仍可作为免费/open 备选，但公共实例可能限流或不可用。
+- 生产或高质量翻译可切换到 `openai` / `gemini`。
+- 如果外部 provider 未配置、限流、超时或返回英文原文，后端会自动回退到本地术语感知 mock 翻译，保证字幕链路不中断。
+- 本地回退翻译会优先替换术语库和常见遥感/会议表达，尽量输出中文；不会再把整段英文直接当作中文字幕返回。
+
+当前 `mock` ASR 模式仍可用于演示字幕链路，但不会转写你的真实语音。
 
 ## 实时协议
 
