@@ -129,6 +129,114 @@ textarea {
   color: var(--lf-text);
 }
 
+.el-table,
+.el-table__expanded-cell,
+.el-table th.el-table__cell,
+.el-table tr,
+.el-table td.el-table__cell,
+.el-table__body-wrapper,
+.el-table__inner-wrapper,
+.el-table__fixed,
+.el-table__fixed-right,
+.el-table__fixed-header-wrapper,
+.el-table__fixed-body-wrapper,
+.el-table__fixed-footer-wrapper {
+  background: rgba(8, 22, 42, 0.96) !important;
+  color: var(--lf-text) !important;
+}
+
+.el-table {
+  --el-table-bg-color: rgba(8, 22, 42, 0.96);
+  --el-table-tr-bg-color: rgba(8, 22, 42, 0.96);
+  --el-table-header-bg-color: rgba(10, 28, 54, 0.98);
+  --el-table-row-hover-bg-color: rgba(47, 155, 255, 0.16);
+  --el-table-current-row-bg-color: rgba(47, 155, 255, 0.2);
+  --el-table-text-color: var(--lf-text);
+  --el-table-header-text-color: #d8ebff;
+  --el-table-border-color: rgba(113, 184, 255, 0.12);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.el-table th.el-table__cell {
+  color: #d8ebff !important;
+  font-weight: 700;
+}
+
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background: rgba(13, 31, 58, 0.98) !important;
+}
+
+.el-table__body tr:hover > td.el-table__cell,
+.el-table__body tr.hover-row > td.el-table__cell {
+  background: rgba(47, 155, 255, 0.16) !important;
+  color: var(--lf-text) !important;
+}
+
+.el-table__empty-block {
+  background: rgba(8, 22, 42, 0.96) !important;
+}
+
+.el-table__empty-text {
+  color: var(--lf-text-muted) !important;
+}
+
+.el-table .cell {
+  color: inherit;
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  background: rgba(8, 22, 42, 0.96) !important;
+  border: 1px solid rgba(113, 184, 255, 0.16) !important;
+  box-shadow: none !important;
+  color: var(--lf-text) !important;
+}
+
+.el-input__inner,
+.el-textarea__inner,
+.el-select__placeholder,
+.el-select__selected-item,
+.el-select__selected-item span {
+  color: var(--lf-text) !important;
+}
+
+.el-input__inner::placeholder,
+.el-textarea__inner::placeholder {
+  color: var(--lf-text-muted) !important;
+}
+
+.el-select-dropdown,
+.el-picker__popper,
+.el-popper.is-light {
+  background: rgba(9, 24, 45, 0.98) !important;
+  border-color: rgba(113, 184, 255, 0.18) !important;
+  color: var(--lf-text) !important;
+}
+
+.el-select-dropdown__item {
+  color: var(--lf-text) !important;
+}
+
+.el-select-dropdown__item.is-hovering,
+.el-select-dropdown__item:hover,
+.el-select-dropdown__item.selected {
+  background: rgba(47, 155, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+.el-pagination button,
+.el-pager li {
+  background: rgba(8, 22, 42, 0.96) !important;
+  color: var(--lf-text) !important;
+}
+
+.el-pagination button:disabled,
+.el-pager li.is-disabled {
+  color: rgba(152, 184, 217, 0.48) !important;
+}
+
 @media (max-width: 768px) {
   .lf-heading {
     font-size: 26px;

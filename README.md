@@ -13,7 +13,11 @@
 
 ## 运行效果
 
-![LinguaFlow 运行效果](./image.png)
+演示视频：[Bilibili - LinguaFlow Demo](https://www.bilibili.com/video/BV1MQEx6uEeL?vd_source=bc061f3f19890c09d9d49252318dbb00)
+
+![LinguaFlow 实时翻译演示](./PixPin_2026-06-07_17-23-14.png)
+
+![LinguaFlow 历史与设置演示](./PixPin_2026-06-07_17-23-52.png)
 
 ## 目录结构
 

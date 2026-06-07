@@ -10,6 +10,7 @@
         <el-input v-model="historyStore.query" placeholder="关键词检索英文或中文" clearable />
         <el-input v-model="historyStore.sessionId" placeholder="按会话 ID 过滤" clearable />
         <el-button type="primary" @click="historyStore.load()">查询</el-button>
+        <el-button :disabled="historyStore.items.length === 0" @click="exportCurrentHistoryTxt">导出 TXT</el-button>
         <el-button @click="openExportDialog">导出 JSON</el-button>
       </div>
     </div>
@@ -48,6 +49,7 @@ import ExportDialog from '../components/history/ExportDialog.vue'
 import HistoryTable from '../components/history/HistoryTable.vue'
 import EditSubtitleDialog from '../components/subtitle/EditSubtitleDialog.vue'
 import { exportHistoryUrl } from '../services/api'
+import { exportHistoryItemsToTxt } from '../services/subtitleExport'
 import { useHistoryStore } from '../stores/history'
 import { useRealtimeStore } from '../stores/realtime'
 import type { HistoryItem, SubtitleSegment } from '../types'
@@ -99,6 +101,10 @@ async function saveCorrection(payload: { segmentId: string; sourceText?: string;
 function openExportDialog() {
   exportDialogVisible.value = true
 }
+
+function exportCurrentHistoryTxt() {
+  exportHistoryItemsToTxt(historyStore.items, historyStore.sessionId || historyStore.query || 'history')
+}
 </script>
 
 <style scoped>
@@ -112,7 +118,7 @@ function openExportDialog() {
 
 .filter-grid {
   display: grid;
-  grid-template-columns: 220px 220px auto auto;
+  grid-template-columns: 220px 220px auto auto auto;
   gap: 10px;
   align-items: center;
 }

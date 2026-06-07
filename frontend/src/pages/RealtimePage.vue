@@ -33,6 +33,7 @@
           停止录音
         </el-button>
         <el-button @click="realtimeStore.resetSession()">新建会话</el-button>
+        <el-button :disabled="realtimeStore.segments.length === 0" @click="exportCurrentSessionTxt">导出 TXT</el-button>
       </div>
     </div>
 
@@ -108,6 +109,7 @@ import { ref, watch } from 'vue'
 import EditSubtitleDialog from '../components/subtitle/EditSubtitleDialog.vue'
 import SubtitlePanel from '../components/subtitle/SubtitlePanel.vue'
 import { useRealtimeSession } from '../composables/useRealtimeSession'
+import { exportSubtitleSegmentsToTxt } from '../services/subtitleExport'
 import type { SubtitleSegment } from '../types'
 
 const { realtimeStore, settingsStore, reconnectRealtimeSession } = useRealtimeSession()
@@ -141,6 +143,10 @@ async function saveCorrection(payload: { segmentId: string; sourceText?: string;
 async function changeAsrProvider(provider: string) {
   await settingsStore.setAsrProvider(provider)
   await reconnectRealtimeSession()
+}
+
+function exportCurrentSessionTxt() {
+  exportSubtitleSegmentsToTxt(realtimeStore.sessionId, realtimeStore.segments)
 }
 </script>
 
