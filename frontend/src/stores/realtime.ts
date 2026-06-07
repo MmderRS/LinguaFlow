@@ -13,11 +13,18 @@ import type {
 } from '../types'
 
 const createSessionId = () => `session-${Math.random().toString(36).slice(2, 10)}`
-const SILENCE_CHECK_MS = 120
-const SILENCE_END_MS = 700
-const MIN_SEGMENT_MS = 700
-const MAX_SEGMENT_MS = 10000
-const SPEECH_RMS_THRESHOLD = 0.035
+const SILENCE_CHECK_MS = 80
+const SILENCE_END_MS = 450
+const MIN_SEGMENT_MS = 350
+const MAX_SEGMENT_MS = 6000
+const SPEECH_RMS_THRESHOLD = 0.018
+const DEMO_INTERVAL_MS = 1200
+const DEMO_SEGMENTS = [
+  "Welcome to today's remote sensing conference",
+  'We will focus on remote sensing imagery analysis',
+  'Land cover classification uses U-Net models',
+  'Semantic segmentation improves GIS interpretation',
+]
 
 function pickRecordingMimeType(): string {
   const candidates = [
@@ -57,6 +64,8 @@ export const useRealtimeStore = defineStore('realtime', {
     analyserData: null as Uint8Array<ArrayBuffer> | null,
     silenceTimer: 0,
     segmentTimer: 0,
+    demoTimer: 0,
+    demoIndex: 0,
     segmentStartedAt: 0,
     speechStartedAt: 0,
     lastVoiceAt: 0,
@@ -208,28 +217,34 @@ export const useRealtimeStore = defineStore('realtime', {
       this.debugInput = ''
     },
     async startRecording() {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        this.error = '当前浏览器不支持录音'
-        return
-      }
       if (!this.client) {
         await this.connect(this.websocketPath)
       }
       await this.client?.waitUntilOpen()
       this.cleanupRecorder()
+
+      if (this.isMockAsr) {
+        this.recording = true
+        this.connectionDetail = '演示模式运行中：自动推送模拟会议字幕'
+        this.startDemoPlayback()
+        return
+      }
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        this.error = '当前浏览器不支持录音'
+        return
+      }
+
       this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
       this.recording = true
-      this.connectionDetail = this.isMockAsr
-        ? '演示录音已开始'
-        : '实时识别中：检测到一句话结束后自动提交'
+      this.connectionDetail = '实时识别中：检测到短暂停顿后自动提交'
       this.startRecorderSegment()
-      if (!this.isMockAsr) {
-        await this.startVoiceActivityDetection()
-      }
+      await this.startVoiceActivityDetection()
     },
     stopRecording() {
       this.recording = false
       this.restartingSegment = false
+      this.stopDemoPlayback()
       this.stopVoiceActivityDetection()
       if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
         this.mediaRecorder.stop()
@@ -239,6 +254,23 @@ export const useRealtimeStore = defineStore('realtime', {
       this.mediaRecorder = null
       this.mediaStream?.getTracks().forEach((track) => track.stop())
       this.mediaStream = null
+    },
+    startDemoPlayback() {
+      this.demoIndex = 0
+      void this.sendDemoSegment()
+      this.demoTimer = window.setInterval(() => {
+        void this.sendDemoSegment()
+      }, DEMO_INTERVAL_MS)
+    },
+    stopDemoPlayback() {
+      window.clearInterval(this.demoTimer)
+      this.demoTimer = 0
+    },
+    async sendDemoSegment() {
+      if (!this.recording || !this.isMockAsr) return
+      const text = DEMO_SEGMENTS[this.demoIndex % DEMO_SEGMENTS.length]
+      this.demoIndex += 1
+      await this.sendDebugText(text)
     },
     startRecorderSegment() {
       if (!this.mediaStream) return
@@ -265,16 +297,13 @@ export const useRealtimeStore = defineStore('realtime', {
         }
         this.restartingSegment = false
       }
-      if (this.isMockAsr) {
-        recorder.start(900)
-      } else {
-        recorder.start()
-      }
+      recorder.start()
       this.mediaRecorder = recorder
     },
     async startVoiceActivityDetection() {
       if (!this.mediaStream) return
       this.audioContext = new AudioContext()
+      await this.audioContext.resume()
       const source = this.audioContext.createMediaStreamSource(this.mediaStream)
       this.analyser = this.audioContext.createAnalyser()
       this.analyser.fftSize = 1024
@@ -295,6 +324,7 @@ export const useRealtimeStore = defineStore('realtime', {
       }
       const rms = Math.sqrt(sum / this.analyserData.length)
       const now = nowMs()
+      const segmentDuration = now - this.segmentStartedAt
 
       if (rms >= SPEECH_RMS_THRESHOLD) {
         this.hasVoiceInSegment = true
@@ -305,10 +335,15 @@ export const useRealtimeStore = defineStore('realtime', {
         return
       }
 
-      if (!this.hasVoiceInSegment || !this.lastVoiceAt) return
+      if (!this.hasVoiceInSegment || !this.lastVoiceAt) {
+        if (segmentDuration >= MAX_SEGMENT_MS) {
+          this.restartSilentRecorderSegment()
+        }
+        return
+      }
+
       const speechDuration = now - this.speechStartedAt
       const silenceDuration = now - this.lastVoiceAt
-      const segmentDuration = now - this.segmentStartedAt
       const reachedNaturalPause = speechDuration >= MIN_SEGMENT_MS && silenceDuration >= SILENCE_END_MS
       const reachedMaxDuration = segmentDuration >= MAX_SEGMENT_MS
 
@@ -319,6 +354,11 @@ export const useRealtimeStore = defineStore('realtime', {
     finalizeCurrentAudioSegment() {
       if (!this.recording || !this.mediaRecorder || this.mediaRecorder.state === 'inactive') return
       this.restartingSegment = true
+      this.mediaRecorder.stop()
+    },
+    restartSilentRecorderSegment() {
+      if (!this.recording || !this.mediaRecorder || this.mediaRecorder.state === 'inactive') return
+      this.restartingSegment = false
       this.mediaRecorder.stop()
     },
     stopVoiceActivityDetection() {
@@ -332,6 +372,7 @@ export const useRealtimeStore = defineStore('realtime', {
     cleanupRecorder() {
       window.clearInterval(this.segmentTimer)
       this.segmentTimer = 0
+      this.stopDemoPlayback()
       this.stopVoiceActivityDetection()
       this.recording = false
       this.restartingSegment = false

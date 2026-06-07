@@ -9,7 +9,7 @@
           </span>
         </div>
         <p class="lf-subheading">
-          会话 ID：{{ realtimeStore.sessionId }}。{{ realtimeStore.isMockAsr ? '当前不会转写你的真实麦克风语音，请优先使用调试文本验证界面与流程。' : '当前会话会使用真实 ASR provider 处理语音输入。' }}
+          会话 ID：{{ realtimeStore.sessionId }}。{{ realtimeStore.isMockAsr ? '演示模式会自动推送模拟会议字幕，不占用麦克风。' : '当前会话会使用真实 ASR provider 处理语音输入。' }}
         </p>
         <div class="provider-switches">
           <label>
@@ -27,7 +27,7 @@
           :disabled="realtimeStore.recording"
           @click="realtimeStore.startRecording()"
         >
-          {{ realtimeStore.isMockAsr ? '录音演示' : '开始录音' }}
+          {{ realtimeStore.isMockAsr ? '启动演示' : '开始录音' }}
         </el-button>
         <el-button :disabled="!realtimeStore.recording" @click="realtimeStore.stopRecording()">
           停止录音
@@ -44,7 +44,7 @@
             <h3>调试文本注入</h3>
           </header>
           <div v-if="realtimeStore.isMockAsr" class="mock-note">
-            当前后端 ASR 仍是 mock。你录音后看到的字幕是演示文本，不是你的真实说话内容。
+            当前后端 ASR 是 mock。点击“启动演示”会自动推送模拟字幕，不会请求麦克风。
           </div>
           <p class="lf-subheading">在没有真实音频链路时，可以直接输入英文句子验证字幕、翻译、术语命中和修正逻辑。</p>
           <el-input
